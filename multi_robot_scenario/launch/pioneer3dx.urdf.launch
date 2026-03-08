@@ -1,0 +1,21 @@
+<launch>
+
+  <!-- Load the URDF into the ROS Parameter Server (find v4r_gazebo) -->
+  <param name="robot_description" command="$(find xacro)/xacro '$(find multi_robot_tutorial)/xacro/pioneer3dx.xacro'" />
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+      <param name="publish_frequency" type="double" value="30.0"/>
+      <!--<param name="tf_prefix" type="string" value=""/>-->
+  </node>
+
+<node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher">
+      <param name="publish_frequency" type="double" value="30.0"/>
+  </node>
+
+
+  <node pkg="tf" type="static_transform_publisher" name="odom_to_base" args="0 0 0 0 0 0 odom base_link 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="base_to_laser" args="0.16 0 0.1 0 0 0 base_link laser 50"/>
+  <node pkg="tf" type="static_transform_publisher" name="base_to_camera" args="0.1 0 0.2 0 0 0 base_link camera_depth_optical_frame 50"/>
+
+
+</launch>

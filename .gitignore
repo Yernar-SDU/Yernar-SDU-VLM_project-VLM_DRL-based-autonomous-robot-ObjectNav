@@ -1,0 +1,30 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+moonenv/
+vlmenv/
+venv/
+env/
+
+# ── ROS build artifacts ────────────────────────────────────────────────────────
+catkin_ws/build/
+catkin_ws/devel/
+catkin_ws/build_isolated/
+catkin_ws/devel_isolated/
+
+# ── Jupyter ────────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Runtime generated files ────────────────────────────────────────────────────
+TD3/latencies.txt
+TD3/_models.csv
+
+# ── Training checkpoints (too large for git) ───────────────────────────────────
+TD3/checkpoints/
+
+# ── Large training data ────────────────────────────────────────────────────────
+*.pkl

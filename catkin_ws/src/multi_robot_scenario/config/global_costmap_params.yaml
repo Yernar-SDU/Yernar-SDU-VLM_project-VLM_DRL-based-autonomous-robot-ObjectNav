@@ -1,0 +1,21 @@
+global_costmap:
+  global_frame: map
+  robot_base_frame: r1/base_link
+  update_frequency: 2.0
+  publish_frequency: 1.0
+  transform_tolerance: 0.5
+  
+  # IMPORTANT: Set static_map to false if no map server
+  static_map: false
+  rolling_window: true
+  
+  # Make the costmap large enough to cover your goals
+  width: 30.0
+  height: 30.0
+  resolution: 0.05
+  origin_x: -15.0
+  origin_y: -15.0
+  
+  plugins:
+    - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+    - {name: inflation_layer, type: "costmap_2d::InflationLayer"}

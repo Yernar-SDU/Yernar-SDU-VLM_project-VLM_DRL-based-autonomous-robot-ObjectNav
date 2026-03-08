@@ -1,0 +1,10 @@
+red fire hydrant
+bookshelf
+table
+brown cube box
+person_standing
+trash can
+wheel
+postbox
+WoodenChair
+

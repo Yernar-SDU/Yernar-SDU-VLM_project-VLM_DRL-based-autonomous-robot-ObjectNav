@@ -1,0 +1,17 @@
+<launch>
+  <rosparam file="$(find my_robot_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+  <rosparam file="$(find my_robot_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+    <remap from="cmd_vel" to="r1/cmd_vel" />
+    <remap from="odom" to="r1/odom" />
+    <param name="base_global_planner" value="navfn/NavfnROS"/>
+    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>
+    <param name="global_costmap/global_frame" value="map"/>
+    <param name="global_costmap/robot_base_frame" value="base_link"/>
+    <param name="local_costmap/global_frame" value="odom"/>
+    <param name="local_costmap/robot_base_frame" value="base_link"/>
+
+  </node>
+</launch>

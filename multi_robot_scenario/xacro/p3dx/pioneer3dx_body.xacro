@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="inertia_tensors.xacro"/>
+  <xacro:include filename="pioneer3dx_chassis.xacro"/>
+  <xacro:include filename="pioneer3dx_wheel.xacro"/>
+  <xacro:include filename="pioneer3dx_plugins.xacro"/>
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
+   
+
+  <xacro:macro name="pioneer3dx_body" params="name parent meshes">
+
+    <link name="${parent}"/>
+
+    
+    <!-- Add floating base -->
+    <link name="base_footprint"/>
+    <joint name="base_footprint_joint" type="floating">
+      <parent link="world"/>
+      <child link="base_footprint"/>
+    </joint>
+
+    <xacro:pioneer_chassis name="${name}" parent="base_link" xyz="0 0 0" rpy="0 0 0" meshes="${meshes}"/>
+
+    <xacro:pioneer_wheel side="right" parent="${name}" xyz="0  15 0.01" rpy="0 0 0" radius="0.09" meshes="${meshes}"/>
+    <xacro:pioneer_wheel side="left" parent="${name}" xyz="0 -0.15 0.09" rpy="0 0 0" radius="0.09" meshes="${meshes}"/>
+    
+    <xacro:pioneer3dx_diff_drive />
+    <xacro:pioneer3dx_joints_state_publisher /> <xacro:gazebo_control />
+    
+    <xacro:sensor_d435 name="camera" topics_ns="realsense_camera" parent="base_link" publish_pointcloud="true">
+      <origin xyz="0.15 0 0.32" rpy="0 0 0" />
+    </xacro:sensor_d435>
+
+    <link name="imu_link">
+        <inertial>
+          <mass value="0.01"/>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+        </inertial>
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="0.01 0.01 0.01"/>
+          </geometry>
+        </visual>
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="0.01 0.01 0.01"/>
+          </geometry>
+        </collision>
+      </link>
+
+      <joint name="imu_joint" type="fixed">
+        <parent link="base_link"/> <child link="imu_link"/>
+        <origin xyz="0.1 0 0.15" rpy="0 0 0"/>
+      </joint>
+      
+
+      <gazebo reference="imu_link">
+        <gravity>true</gravity>
+        <sensor name="imu_sensor" type="imu">
+          <always_on>true</always_on>
+          <update_rate>100</update_rate> <visualize>true</visualize> <topic>__default_topic__</topic> <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+            <topicName>imu/data</topicName> <bodyName>imu_link</bodyName> <updateRateHZ>100.0</updateRateHZ> <gaussianNoise>0.0</gaussianNoise> <xyzOffset>0 0 0</xyzOffset>
+            <rpyOffset>0 0 0</rpyOffset>
+            <frameName>imu_link</frameName> <initialOrientationAsReference>false</initialOrientationAsReference>
+          </plugin>
+          <pose>0 0 0 0 0 0</pose>
+        </sensor>
+    </gazebo>
+    </xacro:macro>
+</robot>

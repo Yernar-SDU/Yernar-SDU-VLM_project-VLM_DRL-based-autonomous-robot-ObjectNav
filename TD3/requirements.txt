@@ -1,0 +1,36 @@
+# ── VLM Server (vlm_server.py) ────────────────────────────────────────────────
+# Run with: uvicorn vlm_server:app --host 127.0.0.1 --port 8000 --workers 1
+# fastapi==0.123.9
+# uvicorn[standard]==0.38.0
+# pillow==10.4.0
+# NOTE: Moondream is NOT listed here — install it separately, see README.
+
+# ── PyTorch + HuggingFace (VLM inference & training) ─────────────────────────
+# For CUDA 12.x: pip install torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cu124
+# For CPU only:  pip install torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+transformers
+accelerate
+huggingface-hub
+safetensors
+tokenizers==0.20.3
+einops
+rospkg
+# ── Vision & utilities ────────────────────────────────────────────────────────
+numpy
+opencv-python
+requests
+pandas
+squaternion
+pynput
+python-multipart
+
+# ── Reinforcement learning & training ─────────────────────────────────────────
+gymnasium
+stable-baselines3[extra]
+tensorboard
+matplotlib
+
+# ── GPT-4o VLM backend ────────────────────────────────────────────────────────
+openai==1.55.3

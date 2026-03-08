@@ -1,0 +1,127 @@
+<launch>
+<arg name="gui" value="false"/>
+<arg name="world_name" default="TD3.world"/>
+
+   <!-- Gazebo -->
+  <include file="$(find multi_robot_scenario)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)"/>
+  </include>
+
+  <!-- Robot with diff drive -->
+  <include file="$(find multi_robot_scenario)/launch/pioneer3dx.gazebo.launch">
+     <arg name="robot_name" value="r1" />
+     <arg name="robot_position" value="-x 0.0 -y 0.0 -z 0.01 -R 0 -P 0 -Y +0.0" />
+  </include>
+
+  <!-- NO depth-to-laser conversion - use real LiDAR directly -->
+
+  <!-- Gmapping using real LiDAR data -->
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <param name="base_frame" value="base_link"/>
+    <param name="odom_frame" value="odom"/>
+    <param name="map_frame" value="map"/>
+    
+    <!-- Use the working laser scan topic -->
+    <remap from="scan" to="/r1/front_laser/scan"/>
+    
+    <!-- Standard parameters for real LiDAR -->
+    <param name="maxUrange" value="15.0"/>
+    <param name="maxRange" value="16.0"/>
+    <param name="minimumScore" value="5"/>       <!-- Higher for clean LiDAR -->
+    <param name="linearUpdate" value="0.1"/>
+    <param name="angularUpdate" value="0.05"/>
+    <param name="temporalUpdate" value="1.0"/>
+    <param name="particles" value="30"/>
+    <param name="delta" value="0.05"/>
+    <param name="iterations" value="5"/>
+    <param name="sigma" value="0.05"/>
+    <param name="kernelSize" value="1"/>
+    <param name="lstep" value="0.05"/>
+    <param name="astep" value="0.05"/>
+    <param name="ogain" value="3.0"/>
+    <param name="lskip" value="0"/>
+    <param name="resampleThreshold" value="0.5"/>
+    <param name="srr" value="0.1"/>
+    <param name="srt" value="0.2"/>
+    <param name="str" value="0.1"/>
+    <param name="stt" value="0.2"/>
+
+    <param name="xmin" value="-10.0"/>
+    <param name="ymin" value="-10.0"/>
+    <param name="xmax" value="10.0"/>
+    <param name="ymax" value="10.0"/>
+
+  </node>
+
+  <!-- Move Base -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <param name="base_global_planner" value="navfn/NavfnROS"/>
+    <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
+    
+    <param name="global_costmap/global_frame" value="map"/>
+    <param name="global_costmap/robot_base_frame" value="base_link"/>
+    <param name="local_costmap/global_frame" value="odom"/>
+    <param name="local_costmap/robot_base_frame" value="base_link"/>
+    
+    <param name="transform_tolerance" value="1.0"/>
+    <param name="recovery_behavior_enabled" value="true"/>
+    
+    <!-- Costmaps using real LiDAR -->
+    <param name="global_costmap/static_map" value="true"/>
+    <param name="global_costmap/rolling_window" value="true"/>
+    <param name="global_costmap/width" value="50.0"/>
+    <param name="global_costmap/height" value="50.0"/>
+    <param name="global_costmap/resolution" value="0.05"/>
+    <param name="global_costmap/update_frequency" value="2.0"/>
+    
+    <param name="local_costmap/static_map" value="false"/>
+    <param name="local_costmap/rolling_window" value="true"/>
+    <param name="local_costmap/width" value="6.0"/>
+    <param name="local_costmap/height" value="6.0"/>
+    <param name="local_costmap/resolution" value="0.05"/>
+    <param name="local_costmap/update_frequency" value="5.0"/>
+    
+    <!-- Use real LiDAR for obstacles -->
+    <param name="global_costmap/obstacle_layer/observation_sources" value="laser_scan_sensor"/>
+    <param name="local_costmap/obstacle_layer/observation_sources" value="laser_scan_sensor"/>
+    
+    <param name="global_costmap/obstacle_layer/laser_scan_sensor/topic" value="/r1/front_laser/scan"/>
+    <param name="global_costmap/obstacle_layer/laser_scan_sensor/data_type" value="LaserScan"/>
+    <param name="global_costmap/obstacle_layer/laser_scan_sensor/clearing" value="true"/>
+    <param name="global_costmap/obstacle_layer/laser_scan_sensor/marking" value="true"/>
+    
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/topic" value="/r1/front_laser/scan"/>
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/data_type" value="LaserScan"/>
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/clearing" value="true"/>
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/marking" value="true"/>
+    
+    <!-- Standard movement parameters -->
+    <param name="TrajectoryPlannerROS/max_vel_x" value="0.5"/>
+    <param name="TrajectoryPlannerROS/min_vel_x" value="0.1"/>
+    <param name="TrajectoryPlannerROS/max_vel_theta" value="1.0"/>
+    <param name="TrajectoryPlannerROS/xy_goal_tolerance" value="0.2"/>
+    <param name="TrajectoryPlannerROS/yaw_goal_tolerance" value="0.2"/>
+    
+    <remap from="cmd_vel" to="/r1/cmd_vel"/>
+    <remap from="odom" to="/r1/odom"/>
+  </node>
+  
+  <!-- explore_lite - should work properly with clean LiDAR data -->
+  <!-- <node pkg="explore_lite" type="explore" name="explore" output="screen">
+    <param name="robot_base_frame" value="base_link"/>
+    <param name="costmap_topic" value="move_base/global_costmap/costmap"/>
+    <param name="costmap_updates_topic" value="move_base/global_costmap/costmap_updates"/>
+    <param name="visualize" value="true"/>
+    <param name="planner_frequency" value="1.0"/>
+    <param name="progress_timeout" value="30.0"/>
+    <param name="potential_scale" value="3.0"/>
+    <param name="orientation_scale" value="0.0"/>
+    <param name="gain_scale" value="1.0"/>
+    <param name="transform_tolerance" value="1.0"/>
+    <param name="min_frontier_size" value="0.75"/>
+  </node> -->
+
+  <!-- RVIZ -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find multi_robot_scenario)/launch/pioneer3dx.rviz" />
+
+</launch>
