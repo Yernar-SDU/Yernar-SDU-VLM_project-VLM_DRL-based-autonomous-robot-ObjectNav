@@ -31,7 +31,7 @@ class VLM_Response_Processor:
     def __init__(self, vlmType, save_dir="/tmp/exploration_data"):
         self.save_dir = save_dir
         self.bridge = CvBridge()
-
+        self.vlmType = vlmType
         # Camera calibration
         self.camera_to_robot_translation = np.array([0.55, 0.02, 0.32])
         self.camera_to_robot_rotation = 0.0
@@ -171,8 +171,11 @@ class VLM_Response_Processor:
     
         
         try:
-            # detected_objects = self.moonDetector.detect(cv_image, self.model_names)
-            detected_objects = self.gptDetector.detect_with_vlm(cv_image, self.model_names)
+            detected_objects = None
+            if self.vlmType == 'moondream':
+                detected_objects = self.moonDetector.detect(cv_image, self.model_names)
+            else:
+                detected_objects = self.gptDetector.detect_with_vlm(cv_image, self.model_names)
 
             if not detected_objects:
                 rospy.loginfo("No objects detected")

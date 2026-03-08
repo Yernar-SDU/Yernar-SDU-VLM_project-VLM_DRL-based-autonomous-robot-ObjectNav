@@ -75,6 +75,19 @@ source catkin_ws/devel_isolated/setup.bash
 
 ## Quick Start
 
+### GPT-4o VLM Backend (optional)
+
+If you want to use `--vlm gpt4o`, you need an OpenAI API key.
+
+1. Get your API key at: **https://platform.openai.com/api-keys**
+2. Open `TD3/GPT_VLM.py` and replace the placeholder on line 24:
+
+```python
+api_key = "YOUR OWN API KEY"  # <-- replace this with your actual key
+```
+
+---
+
 ### Terminal 1 — Start the VLM Server (Moondream)
 
 ```bash
