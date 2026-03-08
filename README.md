@@ -190,3 +190,17 @@ DRL-robot-navigation/
     └── src/
         └── multi_robot_scenario/ # ROS package (robot URDF, launch, config)
 ```
+
+---
+
+## Testing — Retrieve Detected Object Coordinates
+
+After a full exploration run, use `coordinate_retriever.py` to query the detected objects and verify the robot found its targets:
+
+```bash
+cd TD3/
+source vlmenv/bin/activate
+python3 coordinate_retriever.py
+```
+
+This reads `detected_objects.jsonl` (saved during exploration) and prints the 3D world coordinates of all detected objects. Use it to confirm the pipeline is working end-to-end.
