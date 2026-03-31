@@ -20,31 +20,34 @@ A six-room house environment viewed from above in Gazebo. The robot's LiDAR fiel
 
 ---
 
-### Many-Objects Environment — Plant Target
-Dense object environment (`TD3_many.world`) where the robot navigates to a **plant** target. Multiple overlapping trajectories demonstrate consistent success across 5 trials.
+### Navigation Worlds — Bird-Eye Results
 
-![Bird-eye view: plant target navigation](images/bird_eye_many_objects_plant.png)
-
----
-
-### Many-Objects Environment — Trash Can Target
-Same dense environment, but targeting a **trash can**. The robot adapts its path across trials while reliably reaching the goal.
-
-![Bird-eye view: trash can target navigation](images/bird_eye_many_objects_trashcan.png)
-
----
-
-### Obstacle Stress Test — Fridge Target
-`TD3_obs.world` adds traffic cones and boxes as obstacles. The robot navigates around them to reach a **fridge** target, demonstrating robust obstacle avoidance.
-
-![Bird-eye view: obstacle stress test with fridge target](images/bird_eye_obstacle_stress_fridge.png)
-
----
-
-### Parking Sign Navigation (3D View)
-First-person Gazebo view of the robot navigating toward a **parking sign** in a cluttered indoor scene. The green dotted path shows the planned trajectory to the detected target.
-
-![Parking sign navigation - 3D view](images/parking_sign_navigation.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>Many-Objects — Plant Target</b><br>
+      <sub>TD3_many.world · 5 trials · 100% success</sub><br>
+      <img src="images/bird_eye_many_objects_plant.png" width="280"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Many-Objects — Trash Can Target</b><br>
+      <sub>TD3_many.world · 5 trials · 100% success</sub><br>
+      <img src="images/bird_eye_many_objects_trashcan.png" width="280"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <b>Obstacle Stress Test — Fridge Target</b><br>
+      <sub>TD3_obs.world · traffic cones & boxes</sub><br>
+      <img src="images/bird_eye_obstacle_stress_fridge.png" width="280"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Parking Sign Navigation (3D View)</b><br>
+      <sub>TD3_signs2.world · green path = planned trajectory</sub><br>
+      <img src="images/parking_sign_navigation.png" width="280"/>
+    </td>
+  </tr>
+</table>
 
 ---
 
