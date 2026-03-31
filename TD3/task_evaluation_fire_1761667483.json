@@ -1,0 +1,103 @@
+{
+  "task": "fire",
+  "goal_position": {
+    "x": 1.9721668084180237,
+    "y": -0.017445618939396133
+  },
+  "num_trials": 5,
+  "metrics": {
+    "SR": 1.0,
+    "SPL": 1.0,
+    "success_count": 5,
+    "avg_path_length": 0.0,
+    "avg_shortest_path": 1.972243968135259,
+    "avg_reward": 100.29735093224049
+  },
+  "trials": [
+    {
+      "trial": 1,
+      "success": true,
+      "path_length": 0.0,
+      "shortest_path_length": 1.972243968135259,
+      "start_pos": [
+        0.0,
+        0.0
+      ],
+      "final_pos": [
+        0.0,
+        0.0
+      ],
+      "reward": 101.48675466120243,
+      "steps": 17,
+      "final_distance": 1.972243968135259
+    },
+    {
+      "trial": 2,
+      "success": true,
+      "path_length": 0.0,
+      "shortest_path_length": 1.972243968135259,
+      "start_pos": [
+        0.0,
+        0.0
+      ],
+      "final_pos": [
+        0.0,
+        0.0
+      ],
+      "reward": 100.0,
+      "steps": 1,
+      "final_distance": 1.972243968135259
+    },
+    {
+      "trial": 3,
+      "success": true,
+      "path_length": 0.0,
+      "shortest_path_length": 1.972243968135259,
+      "start_pos": [
+        0.0,
+        0.0
+      ],
+      "final_pos": [
+        0.0,
+        0.0
+      ],
+      "reward": 100.0,
+      "steps": 1,
+      "final_distance": 1.972243968135259
+    },
+    {
+      "trial": 4,
+      "success": true,
+      "path_length": 0.0,
+      "shortest_path_length": 1.972243968135259,
+      "start_pos": [
+        0.0,
+        0.0
+      ],
+      "final_pos": [
+        0.0,
+        0.0
+      ],
+      "reward": 100.0,
+      "steps": 1,
+      "final_distance": 1.972243968135259
+    },
+    {
+      "trial": 5,
+      "success": true,
+      "path_length": 0.0,
+      "shortest_path_length": 1.972243968135259,
+      "start_pos": [
+        0.0,
+        0.0
+      ],
+      "final_pos": [
+        0.0,
+        0.0
+      ],
+      "reward": 100.0,
+      "steps": 1,
+      "final_distance": 1.972243968135259
+    }
+  ]
+}

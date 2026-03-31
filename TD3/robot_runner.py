@@ -8,6 +8,10 @@ from stable_baselines3 import TD3
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 import pandas as pd
 import os
+import threading
+import rospy
+from geometry_msgs.msg import Pose
+from gazebo_msgs.srv import SpawnModel, DeleteModel
 # Import the Gazebo environment
 from real_env_dd import GazeboEnv
 
@@ -94,12 +98,129 @@ class RobotRunner:
         model_path = "td3_gazebo_custom_policy.zip"
         self.model = TD3.load(model_path, env=self.env)
         print("Loaded trained model from", model_path)
-        
+
         # Track navigation metrics
         self.start_pos = (0.0, 0.0)
         self.current_pos = (0.0, 0.0)
         self.path_length = 0.0
 
+        # ── Gazebo path trail ─────────────────────────────────────────────
+        self._marker_count       = 0
+        self._trial_marker_ids   = []
+        self._last_marker_pos    = None
+        self._marker_spacing     = 0.25
+        try:
+            rospy.wait_for_service('/gazebo/spawn_sdf_model', timeout=5)
+            rospy.wait_for_service('/gazebo/delete_model', timeout=5)
+            self._spawn_sdf    = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
+            self._delete_model = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
+            self._trail_enabled = True
+            print("✅ Gazebo path-trail ready")
+        except Exception as e:
+            self._trail_enabled = False
+            print(f"⚠️  Path trail disabled: {e}")
+
+    # ── Path trail helpers ────────────────────────────────────────────────
+
+    def _spawn_marker(self, x, y, idx):
+        sdf = f"""<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='path_marker_{idx}'>
+    <static>true</static>
+    <link name='link'>
+      <visual name='visual'>
+        <geometry><sphere><radius>0.06</radius></sphere></geometry>
+        <material>
+          <ambient>0 0.9 0 1</ambient>
+          <diffuse>0 1 0 1</diffuse>
+          <emissive>0 0.4 0 1</emissive>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>"""
+        pose = Pose()
+        pose.position.x = x
+        pose.position.y = y
+        pose.position.z = 0.05
+        pose.orientation.w = 1.0
+        try:
+            self._spawn_sdf(f'path_marker_{idx}', sdf, '', pose, 'world')
+        except Exception:
+            pass
+
+    def _maybe_drop_marker(self, x, y):
+        if not self._trail_enabled:
+            return
+        if (self._last_marker_pos is None or
+                np.sqrt((x - self._last_marker_pos[0])**2 +
+                        (y - self._last_marker_pos[1])**2) >= self._marker_spacing):
+            idx = self._marker_count
+            self._marker_count += 1
+            self._trial_marker_ids.append(idx)
+            self._last_marker_pos = (x, y)
+            threading.Thread(target=self._spawn_marker, args=(x, y, idx),
+                             daemon=True).start()
+
+    def _clear_trail(self):
+        if not self._trail_enabled:
+            return
+        for idx in self._trial_marker_ids:
+            try:
+                self._delete_model(f'path_marker_{idx}')
+            except Exception:
+                pass
+        self._trial_marker_ids = []
+        self._last_marker_pos  = None
+
+    def _x_marker_sdf(self, name, r, g, b):
+        return f"""<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='{name}'>
+    <static>true</static>
+    <link name='link'>
+      <visual name='bar1'>
+        <pose>0 0 0.03 0 0 0.7854</pose>
+        <geometry><box><size>0.7 0.1 0.05</size></box></geometry>
+        <material>
+          <ambient>{r} {g} {b} 1</ambient>
+          <diffuse>{r} {g} {b} 1</diffuse>
+          <emissive>{r*0.6} {g*0.6} {b*0.6} 1</emissive>
+        </material>
+      </visual>
+      <visual name='bar2'>
+        <pose>0 0 0.03 0 0 -0.7854</pose>
+        <geometry><box><size>0.7 0.1 0.05</size></box></geometry>
+        <material>
+          <ambient>{r} {g} {b} 1</ambient>
+          <diffuse>{r} {g} {b} 1</diffuse>
+          <emissive>{r*0.6} {g*0.6} {b*0.6} 1</emissive>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>"""
+
+    def _spawn_endpoint_markers(self, start_x, start_y, goal_x, goal_y):
+        if not self._trail_enabled:
+            return
+        for name, x, y, r, g, b in [
+            ('start_marker', start_x, start_y, 0, 0, 1),
+            ('goal_marker',  goal_x,  goal_y,  1, 0, 0),
+        ]:
+            try:
+                self._delete_model(name)
+            except Exception:
+                pass
+            pose = Pose()
+            pose.position.x = x
+            pose.position.y = y
+            pose.position.z = 0.0
+            pose.orientation.w = 1.0
+            try:
+                self._spawn_sdf(name, self._x_marker_sdf(name, r, g, b), '', pose, 'world')
+            except Exception as e:
+                print(f"⚠️  Could not spawn {name}: {e}")
 
     def get_robot_position(self):
         """Get current robot position from environment"""
@@ -110,11 +231,11 @@ class RobotRunner:
         except AttributeError:
             # Fallback if position not directly available
             return self.current_pos
-    
+
     def sendGoal(self, goal_x, goal_y, true_x, true_y, object_name):
         """
         Navigate to goal position and track metrics
-        
+
         Returns:
             dict: Contains success status, path_length, start/end positions, and reward
         """
@@ -127,25 +248,29 @@ class RobotRunner:
 
         for i in range(10):
 
+            self._clear_trail()
             obs = self.env.reset()
-            
+
             # Initialize tracking
             self.start_pos = self.get_robot_position()
             last_pos = self.start_pos
             self.path_length = 0.0
-            
+
+            self._spawn_endpoint_markers(*self.start_pos, goal_x, goal_y)
+            self._maybe_drop_marker(*self.start_pos)
+
             done = False
             total_reward = 0.0
             step_count = 0
-            
+
             print(f"🚀 Starting navigation to ({goal_x:.2f}, {goal_y:.2f})")
-            
+
             while not done:
                 # Use deterministic policy (no exploration noise)
                 action, _ = self.model.predict(obs, deterministic=True)
                 obs, reward, done, info = self.env.step(action)
                 total_reward += reward
-                
+
                 # Update path length
                 current_pos = self.get_robot_position()
                 # print(current_pos)
@@ -155,19 +280,19 @@ class RobotRunner:
                 self.path_length += np.sqrt(dx**2 + dy**2)
                 last_pos = current_pos
                 self.current_pos = current_pos
-                
+
+                self._maybe_drop_marker(*current_pos)
+
                 step_count += 1
-                time.sleep(0.1)      
-            
+                time.sleep(0.1)
+
             final_pos = self.get_robot_position()
-            
-            # Calculate final distance to goal
+
             final_distance = float(np.sqrt((final_pos[0] - true_x)**2 + (final_pos[1] - true_y)**2))
 
-            success = False 
-            
-            # Determine success - info is a boolean in your environment
-            distance_threshold = 1.00 # meters
+            success = False
+
+            distance_threshold = 1.01 # meters
             if final_distance <= distance_threshold:
                 success = True
             # else:
@@ -179,11 +304,11 @@ class RobotRunner:
             #     else:
             #         # last resort: check reward
             #         success = total_reward > 0
-            
+
             print(f"{'✅ Success' if success else '❌ Failed'} | Reward: {total_reward:.2f} | "
                 f"Path: {self.path_length:.2f}m | Steps: {step_count} | "
                 f"Final distance to goal: {final_distance:.2f}m")
-            
+
             results.append({
             'goal_x': goal_x,
             'goal_y': goal_y,
@@ -203,7 +328,7 @@ class RobotRunner:
             })
             i+=1
         df_new = pd.DataFrame(results)
-        filename = "navigation_trials_mnd.xlsx"
+        filename = "navigation_trials_signs.xlsx"
         if os.path.exists(filename):
             df_existing = pd.read_excel(filename)
             df = pd.concat([df_existing, df_new], ignore_index=True)
@@ -214,4 +339,4 @@ class RobotRunner:
         print(f"\n📁 Excel updated → {filename} ({len(df_new)} new rows added)\n")
         return results
 
-        
+

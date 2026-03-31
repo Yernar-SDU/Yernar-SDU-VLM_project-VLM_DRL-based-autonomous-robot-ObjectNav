@@ -89,7 +89,7 @@ class NavigationMetrics:
     def reset(self):
         self.episodes = []
 
-    def save_attempts_to_excel(self, filename="navigation_attempts.xlsx"):
+    def save_attempts_to_excel(self, filename="navigation_attempts_signs.xlsx"):
         if not self.attempts:
             print("⚠ No attempts to save.")
             return
@@ -111,7 +111,7 @@ class ObjectCoordinateRetriever:
         """
         self.objects_file = objects_file
         self.objects_cache = []
-        self.client = OpenAI(api_key="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")
+        self.client = OpenAI(api_key="REMOVED_API_KEY")
         
         # Navigation metrics tracker
         self.metrics = NavigationMetrics()
@@ -174,14 +174,15 @@ class ObjectCoordinateRetriever:
             """
             Record a failed navigation attempt (object not found / not detected)
             """
-            self.metrics.add_episode(
-                success_rate=0.0,
-                avg_path_length=0.0,
-                avg_shortest_path=0.0,
-                avg_spl=0.0,
-                prediction_error=0.0,
-                taken_time = 0.0, 
-            )
+            self.metrics.add_attempt({
+                'success': 0.0,
+                'avg_path_length': 0.0,
+                'avg_shortest_path': 0.0,
+                'avg_spl': 0.0,
+                'prediction_error': 0.0,
+                'taken_time': 0.0,
+            })
+
     
     def update_position(self, current_x: float, current_y: float):
         """
@@ -240,23 +241,22 @@ class ObjectCoordinateRetriever:
         """
         available_objects = self.get_available_objects()
         
-        prompt = f"""You are parsing a user's question about objects in a robot's environment.
+        prompt = f"""
+            You are extracting an object name from a user query.
 
-        Available detected objects:
-        {', '.join(available_objects)}
+            Available detected objects:
+            {', '.join(available_objects)}
 
-        User question: "{user_question}"
+            User query:
+            "{user_question}"
 
-        TASK: Extract ONLY the object name the user is asking about. 
-        Match it to one of the available objects above.
+            TASK:
+            Return the BEST matching object_class from the list.
 
-        RULES:
-        - Return ONLY the exact object_class name from the list above
-        - Match synonyms (e.g., "hydrant" → "red_fire_hydrant", "box" could be "blue_box" or "brick_box")
-        - If user specifies color/type, prioritize that match
-        - If ambiguous (e.g., "box" matches multiple), return the most likely one
-        - If no match, return "NONE"
-        """
+            IMPORTANT RULES:
+            - Return ONLY ONE object_class from the list
+            - NEVER return NONE unless absolutely no reasonable match exists
+            - Match by MEANING, not exact wording """
         # Examples:
         # - "Where is the box?" → "blue_box" or "brick_box" (pick most common)
         # - "Find me blue box" → "blue_box"

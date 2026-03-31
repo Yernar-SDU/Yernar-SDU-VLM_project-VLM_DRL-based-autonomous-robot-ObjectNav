@@ -1,0 +1,43 @@
+
+<launch>
+  <!-- Ensure simulated time is used -->
+  <arg name="use_sim_time" default="true"/>
+
+  <!-- Load costmap params (assumes files exist in config/) -->
+  <rosparam file="$(find multi_robot_scenario)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+  <rosparam file="$(find multi_robot_scenario)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+
+  <!-- remap cmd_vel to r1/cmd_vel and odom to r1/odom -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen" args="">
+    <!-- Remaps: move_base expects to publish cmd_vel; remap it to robot namespace -->
+    <remap from="cmd_vel" to="r1/cmd_vel" />
+    <remap from="odom" to="r1/odom" />
+    <param name="base_global_planner" value="navfn/NavfnROS"/>
+    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>
+    <!-- Global and local frames: global map, local odom-->
+    <param name="global_costmap/global_frame" value="map"/>
+    <param name="global_costmap/robot_base_frame" value="base_link"/>
+    <param name="local_costmap/global_frame" value="r1/odom"/>
+    <param name="local_costmap/robot_base_frame" value="base_link"/>
+
+    <!-- make move_base read sim time -->
+    <param name="use_sim_time" value="$(arg use_sim_time)" />
+  </node>
+</launch>
+
+
+<!-- <launch>
+  <arg name="cmd_vel_topic" default="/r1/cmd_vel"/>
+  <arg name="odom_topic"   default="/r1/odom"/>
+  <arg name="map_topic"    default="/rtabmap/grid_map"/>
+
+  <node pkg="move_base" type="move_base" name="move_base" output="screen">
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+    <remap from="map" to="$(arg map_topic)"/>
+
+    <rosparam file="$(find multi_robot_scenario)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find multi_robot_scenario)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find multi_robot_scenario)/config/move_base_params.yaml" command="load" />
+  </node>
+</launch> -->

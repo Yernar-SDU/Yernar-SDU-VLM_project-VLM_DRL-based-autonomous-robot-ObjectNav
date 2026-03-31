@@ -156,6 +156,9 @@ python3 explorer_node.py --vlm moondream --world turtlebot3_house.world
 |---|---|
 | `TD3.world` | Single room |
 | `turtlebot3_house.world` | Six-room house |
+| `TD3_many.world` | Single room with many objects |
+| `TD3_signs2.world` | Environment with sign objects |
+| `TD3_obs.world` | Obstacle stress test environment |
 
 ---
 

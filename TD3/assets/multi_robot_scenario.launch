@@ -1,6 +1,6 @@
 <launch>
 <arg name="gui" value="false"/>
-<arg name="world_name" default="TD3.world"/>
+<arg name="world_name" default="TD3_signs2.world"/>
 
    <!-- Gazebo -->
   <include file="$(find multi_robot_scenario)/launch/empty_world.launch">
@@ -11,6 +11,9 @@
   <include file="$(find multi_robot_scenario)/launch/pioneer3dx.gazebo.launch">
      <arg name="robot_name" value="r1" />
      <arg name="robot_position" value="-x 0.0 -y 0.0 -z 0.01 -R 0 -P 0 -Y +0.0" />
+     <param name="global_costmap/robot_radius" value="0.1"/>
+      <param name="local_costmap/robot_radius" value="0.1"/>
+
   </include>
 
   <!-- NO depth-to-laser conversion - use real LiDAR directly -->
@@ -46,10 +49,10 @@
     <param name="str" value="0.1"/>
     <param name="stt" value="0.2"/>
 
-    <param name="xmin" value="-10.0"/>
-    <param name="ymin" value="-10.0"/>
-    <param name="xmax" value="10.0"/>
-    <param name="ymax" value="10.0"/>
+    <param name="xmin" value="-5.0"/>
+    <param name="ymin" value="-5.0"/>
+    <param name="xmax" value="5.0"/>
+    <param name="ymax" value="5.0"/>
 
   </node>
 
@@ -65,61 +68,132 @@
     
     <param name="transform_tolerance" value="1.0"/>
     <param name="recovery_behavior_enabled" value="true"/>
-    
+
+
     <!-- Costmaps using real LiDAR -->
-    <param name="global_costmap/static_map" value="true"/>
-    <param name="global_costmap/rolling_window" value="true"/>
-    <param name="global_costmap/width" value="50.0"/>
-    <param name="global_costmap/height" value="50.0"/>
-    <param name="global_costmap/resolution" value="0.05"/>
-    <param name="global_costmap/update_frequency" value="2.0"/>
+
     
-    <param name="local_costmap/static_map" value="false"/>
-    <param name="local_costmap/rolling_window" value="true"/>
-    <param name="local_costmap/width" value="6.0"/>
-    <param name="local_costmap/height" value="6.0"/>
-    <param name="local_costmap/resolution" value="0.05"/>
-    <param name="local_costmap/update_frequency" value="5.0"/>
+    <param name="global_costmap/static_map"           value="false"/>
+    <param name="global_costmap/rolling_window"       value="false"/>
+    <param name="global_costmap/resolution"           value="0.05"/>
+    <param name="global_costmap/update_frequency"     value="2.0"/>
+    <param name="global_costmap/static_map"     value="false"/>
+    <param name="global_costmap/rolling_window" value="false"/>
+    <param name="global_costmap/width"          value="6.0"/>
+    <param name="global_costmap/height"         value="6.0"/>
+    <param name="global_costmap/origin_x"       value="-3.0"/>
+    <param name="global_costmap/origin_y"       value="-3.0"/>
+    <param name="global_costmap/resolution"     value="0.05"/>
+    <param name="global_costmap/inflation_radius"     value="0.35"/>
+    <param name="global_costmap/track_unknown_space"  value="true"/>
+    <param name="global_costmap/map_topic"            value="/map"/>
+    <param name="global_costmap/subscribe_to_updates" value="true"/>
     
-    <!-- Use real LiDAR for obstacles -->
-    <param name="global_costmap/obstacle_layer/observation_sources" value="laser_scan_sensor"/>
-    <param name="local_costmap/obstacle_layer/observation_sources" value="laser_scan_sensor"/>
+    <param name="local_costmap/static_map"       value="false"/>
+    <param name="local_costmap/rolling_window"   value="true"/>
+    <param name="local_costmap/width"            value="10.0"/>
+    <param name="local_costmap/height"           value="10.0"/>
+    <param name="local_costmap/resolution"       value="0.05"/>
+    <param name="local_costmap/update_frequency" value="10.0"/>
+    <param name="local_costmap/inflation_radius"  value="0.35"/>
     
-    <param name="global_costmap/obstacle_layer/laser_scan_sensor/topic" value="/r1/front_laser/scan"/>
+    
+
+    <param name="global_costmap/obstacle_layer/observation_sources" value="laser_scan_sensor velodyne_sensor"/>
+    <param name="local_costmap/obstacle_layer/observation_sources"  value="laser_scan_sensor velodyne_sensor"/>
+
+    <!-- Hokuyo: ±90° front LaserScan -->
+    <param name="global_costmap/obstacle_layer/laser_scan_sensor/topic"     value="/r1/front_laser/scan"/>
     <param name="global_costmap/obstacle_layer/laser_scan_sensor/data_type" value="LaserScan"/>
-    <param name="global_costmap/obstacle_layer/laser_scan_sensor/clearing" value="true"/>
-    <param name="global_costmap/obstacle_layer/laser_scan_sensor/marking" value="true"/>
+    <param name="global_costmap/obstacle_layer/laser_scan_sensor/clearing"  value="true"/>
+    <param name="global_costmap/obstacle_layer/laser_scan_sensor/marking"   value="true"/>
+
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/topic"      value="/r1/front_laser/scan"/>
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/data_type"  value="LaserScan"/>
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/clearing"   value="true"/>
+    <param name="local_costmap/obstacle_layer/laser_scan_sensor/marking"    value="true"/>
+
+    <!-- Velodyne VLP-16: full 360° PointCloud2 — fills the rear/side blind spot -->
+    <param name="global_costmap/obstacle_layer/velodyne_sensor/topic"        value="/velodyne_points"/>
+    <param name="global_costmap/obstacle_layer/velodyne_sensor/data_type"    value="PointCloud2"/>
+    <param name="global_costmap/obstacle_layer/velodyne_sensor/clearing"     value="true"/>
+    <param name="global_costmap/obstacle_layer/velodyne_sensor/marking"      value="true"/>
+    <param name="global_costmap/obstacle_layer/velodyne_sensor/min_obstacle_height" value="0.05"/>
+    <param name="global_costmap/obstacle_layer/velodyne_sensor/max_obstacle_height" value="2.0"/>
+
+    <param name="local_costmap/obstacle_layer/velodyne_sensor/topic"         value="/velodyne_points"/>
+    <param name="local_costmap/obstacle_layer/velodyne_sensor/data_type"     value="PointCloud2"/>
+    <param name="local_costmap/obstacle_layer/velodyne_sensor/clearing"      value="true"/>
+    <param name="local_costmap/obstacle_layer/velodyne_sensor/marking"       value="true"/>
+    <param name="local_costmap/obstacle_layer/velodyne_sensor/min_obstacle_height" value="0.05"/>
+    <param name="local_costmap/obstacle_layer/velodyne_sensor/max_obstacle_height" value="2.0"/>
     
-    <param name="local_costmap/obstacle_layer/laser_scan_sensor/topic" value="/r1/front_laser/scan"/>
-    <param name="local_costmap/obstacle_layer/laser_scan_sensor/data_type" value="LaserScan"/>
-    <param name="local_costmap/obstacle_layer/laser_scan_sensor/clearing" value="true"/>
-    <param name="local_costmap/obstacle_layer/laser_scan_sensor/marking" value="true"/>
-    
-    <!-- Standard movement parameters -->
-    <param name="TrajectoryPlannerROS/max_vel_x" value="0.5"/>
-    <param name="TrajectoryPlannerROS/min_vel_x" value="0.1"/>
-    <param name="TrajectoryPlannerROS/max_vel_theta" value="1.0"/>
+    <param name="TrajectoryPlannerROS/max_vel_x"           value="1.0"/>
+    <param name="TrajectoryPlannerROS/min_vel_x"           value="0.0"/>
+    <param name="TrajectoryPlannerROS/max_vel_theta"       value="3.0"/>
+
+    <param name="TrajectoryPlannerROS/xy_goal_tolerance"   value="0.2"/>
+    <param name="TrajectoryPlannerROS/yaw_goal_tolerance"  value="0.1"/>
+    <param name="TrajectoryPlannerROS/latch_xy_goal_tolerance" value="true"/>
+
+
+    <param name="TrajectoryPlannerROS/pdist_scale"            value="0.1"/>
+    <param name="TrajectoryPlannerROS/gdist_scale"            value="0.8"/>
+    <param name="TrajectoryPlannerROS/occdist_scale"          value="0.005"/>
+
+
+    <param name="TrajectoryPlannerROS/sim_time"               value="3.0"/>
+    <param name="TrajectoryPlannerROS/dwa"                    value="false"/>
+    <param name="global_costmap/cost_scaling_factor" value="0.5"/>  <!-- was default 10 — high value = huge cost near walls -->
+    <param name="local_costmap/cost_scaling_factor"  value="0.5"/>
+
+
+    <param name="TrajectoryPlannerROS/vx_samples"             value="20"/>
+    <param name="TrajectoryPlannerROS/vtheta_samples"         value="60"/>
+
+
+    <param name="TrajectoryPlannerROS/min_in_place_vel_theta" value="0.3"/>
+    <param name="TrajectoryPlannerROS/escape_vel"             value="-0.4"/>
+    <param name="TrajectoryPlannerROS/oscillation_reset_dist" value="0.2"/>
+
+
+    <!-- <param name="controller_patience"                         value="5.0"/>
+    <param name="oscillation_timeout"                         value="5.0"/> -->
+    <!-- Lower oscillation timeout so move_base aborts faster instead of retrying -->
+    <param name="oscillation_timeout" value="8.0"/>
+    <param name="controller_patience" value="8.0"/>    
+
+    <param name="NavfnROS/allow_unknown"                      value="true"/>
+    <param name="NavfnROS/default_tolerance"                  value="0.2"/>
     <param name="TrajectoryPlannerROS/xy_goal_tolerance" value="0.2"/>
-    <param name="TrajectoryPlannerROS/yaw_goal_tolerance" value="0.2"/>
-    
+    <param name="global_costmap/unknown_cost_value" value="-1"/>
+
+
+    <param name="global_costmap/publish_frequency"            value="2.0"/>
+    <param name="local_costmap/publish_frequency"             value="5.0"/>
+    <param name="global_costmap/transform_tolerance"          value="2.0"/>
+    <param name="local_costmap/transform_tolerance"           value="2.0"/>
+      
     <remap from="cmd_vel" to="/r1/cmd_vel"/>
     <remap from="odom" to="/r1/odom"/>
   </node>
   
-  <!-- explore_lite - should work properly with clean LiDAR data -->
-  <!-- <node pkg="explore_lite" type="explore" name="explore" output="screen">
+
+  <arg name="explore" default="false"/>
+  <node if="$(arg explore)" pkg="explore_lite" type="explore" name="explore" output="screen">
+    <param name="move_base_action" value="move_base"/>
     <param name="robot_base_frame" value="base_link"/>
     <param name="costmap_topic" value="move_base/global_costmap/costmap"/>
     <param name="costmap_updates_topic" value="move_base/global_costmap/costmap_updates"/>
     <param name="visualize" value="true"/>
-    <param name="planner_frequency" value="1.0"/>
-    <param name="progress_timeout" value="30.0"/>
+    <param name="planner_frequency" value="0.5"/>
+    <param name="progress_timeout" value="25.0"/>
     <param name="potential_scale" value="3.0"/>
     <param name="orientation_scale" value="0.0"/>
     <param name="gain_scale" value="1.0"/>
-    <param name="transform_tolerance" value="1.0"/>
-    <param name="min_frontier_size" value="0.75"/>
-  </node> -->
+    <param name="transform_tolerance" value="0.5"/>
+    <param name="min_frontier_size" value="0.5"/>
+  </node>
 
   <!-- RVIZ -->
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find multi_robot_scenario)/launch/pioneer3dx.rviz" />

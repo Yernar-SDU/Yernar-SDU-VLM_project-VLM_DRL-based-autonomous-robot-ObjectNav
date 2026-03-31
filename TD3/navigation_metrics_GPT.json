@@ -1,0 +1,48 @@
+{
+  "summary": {
+    "avg_success_rate": 0.22499999999999998,
+    "avg_path_length": 5.710014558674969,
+    "avg_shortest_path": 4.81335022891236,
+    "avg_spl": 0.1929691350514714,
+    "prediction_error": 2.174447604904344,
+    "total_episodes": 4
+  },
+  "episodes": [
+    {
+      "success_rate": 0.1,
+      "avg_path_length": 4.85227677294762,
+      "avg_shortest_path": 2.8029412076947913,
+      "avg_spl": 0.06912683716576437,
+      "prediction_error": 3.9837704210516653,
+      "timestamp": 1767085495.212898,
+      "taken_time": 16.654754996299744
+    },
+    {
+      "success_rate": 0.7,
+      "avg_path_length": 5.873817140477401,
+      "avg_shortest_path": 5.317933723993196,
+      "avg_spl": 0.6027497030401212,
+      "prediction_error": 0.1434257087835613,
+      "timestamp": 1767085714.0037382,
+      "taken_time": 21.650115180015565
+    },
+    {
+      "success_rate": 0.1,
+      "avg_path_length": 4.866162366042376,
+      "avg_shortest_path": 6.090980576001139,
+      "avg_spl": 0.1,
+      "prediction_error": 2.808504328143688,
+      "timestamp": 1767085855.0326996,
+      "taken_time": 13.555827808380126
+    },
+    {
+      "success_rate": 0.0,
+      "avg_path_length": 7.247801955232475,
+      "avg_shortest_path": 5.041545407960314,
+      "avg_spl": 0.0,
+      "prediction_error": 1.762089961638463,
+      "timestamp": 1767086074.698641,
+      "taken_time": 21.745625615119934
+    }
+  ]
+}

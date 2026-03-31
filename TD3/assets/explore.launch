@@ -1,0 +1,29 @@
+<launch>
+<param name="/use_sim_time" value="true"/>
+
+<node pkg="explore_lite" type="explore" respawn="false" name="explore" output="screen">
+
+  <param name="robot_base_frame"      value="base_link"/>
+  <param name="costmap_topic"         value="move_base/global_costmap/costmap"/>
+  <param name="costmap_updates_topic" value="move_base/global_costmap/costmap_updates"/>
+  <param name="visualize"             value="true"/>
+
+  <!-- Maximum aggression:
+       gain_scale=8.0 / potential_scale=0.2 → 40:1 ratio
+       Robot ignores distance almost entirely, always targets the
+       frontier with the most unexplored space regardless of how far. -->
+  <param name="potential_scale"       value="0.2"/>
+  <param name="gain_scale"            value="8.0"/>
+  <param name="orientation_scale"     value="0.0"/>
+
+  <!-- 0.2m: absolute minimum — catches single-cell corner gaps -->
+  <param name="min_frontier_size"     value="0.2"/>
+
+  <!-- replan 2x/sec, give up on a goal after 20s -->
+  <param name="planner_frequency"     value="2.0"/>
+  <param name="progress_timeout"      value="20.0"/>
+
+  <param name="transform_tolerance"   value="0.5"/>
+
+</node>
+</launch>

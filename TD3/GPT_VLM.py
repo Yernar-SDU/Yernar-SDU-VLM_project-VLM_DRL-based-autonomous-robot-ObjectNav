@@ -21,7 +21,7 @@ class GPT_VLMDetector:
         # VLM setup
         self.client = None
         # OpenAI API key - SET YOUR KEY HERE
-        api_key = "YOUR OWN API KEY"
+        api_key = "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"
         self.client = OpenAI(api_key=api_key)
     
     def detect_with_vlm(self, image, model_names):

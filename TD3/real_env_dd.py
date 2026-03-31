@@ -34,10 +34,10 @@ LAUNCHFILE = "multi_robot_scenario.launch"
 ENVIRONMENT_DIM = 20
 TIME_DELTA = 0.1
 MAX_STEPS = 600
-GOAL_REACHED_DIST = 0.5
+GOAL_REACHED_DIST = 0.8
 COLLISION_DIST = 0.1
 
-STUCK_STEPS = 60
+STUCK_STEPS = 120
 STUCK_MOVEMENT_THRESHOLD = 0.02
 
 NEAR_WALL_STEPS = 40
@@ -450,7 +450,7 @@ class GazeboEnv:
 
         stuck = False
         self.time_step += 1
-        if self.stuck_counter >= STUCK_STEPS or self.time_step == 500:
+        if self.stuck_counter >= STUCK_STEPS or self.time_step == 1000:
             self.total_time = time.time() - self.episode_start_time if self.episode_start_time else 0.0
             self.take_screenshot()
             print("[Env] Robot stuck => reset")
@@ -620,7 +620,7 @@ class GazeboEnv:
         self.odom_yaw = angle
 
         # self.random_box()
-        self.change_goal()
+        # self.change_goal()
         self.publish_markers([0.0, 0.0])
 
         rospy.wait_for_service("/gazebo/unpause_physics")
@@ -1081,61 +1081,61 @@ class GazeboEnv:
                     'trial_num': self.episode_num
                 })
             
-            # ============================================
-            # DRAW ALL PATHS
-            # ============================================
-            for trial in self.all_trial_paths:
-                path_points = trial['points']
-                path_color = trial['color']
+            # # ============================================
+            # # DRAW ALL PATHS
+            # # ============================================
+            # for trial in self.all_trial_paths:
+            #     path_points = trial['points']
+            #     path_color = trial['color']
                 
-                if len(path_points) >= 2:
-                    pixel_points = [to_pixel(wx, wy) for (wx, wy) in path_points]
+            #     if len(path_points) >= 2:
+            #         pixel_points = [to_pixel(wx, wy) for (wx, wy) in path_points]
                     
-                    # Draw white border for visibility
-                    for i in range(1, len(pixel_points)):
-                        cv2.line(cv_image, pixel_points[i-1], pixel_points[i], 
-                                (255, 255, 255), 5)
+            #         # Draw white border for visibility
+            #         for i in range(1, len(pixel_points)):
+            #             cv2.line(cv_image, pixel_points[i-1], pixel_points[i], 
+            #                     (255, 255, 255), 5)
                     
-                    # Draw colored line
-                    for i in range(1, len(pixel_points)):
-                        cv2.line(cv_image, pixel_points[i-1], pixel_points[i], 
-                                path_color, 3)
+            #         # Draw colored line
+            #         for i in range(1, len(pixel_points)):
+            #             cv2.line(cv_image, pixel_points[i-1], pixel_points[i], 
+            #                     path_color, 3)
             
-            # ============================================
-            # DRAW START POINTS (BIG GREEN DOTS)
-            # ============================================
-            for trial in self.all_trial_paths:
-                path_points = trial['points']
+            # # ============================================
+            # # DRAW START POINTS (BIG GREEN DOTS)
+            # # ============================================
+            # for trial in self.all_trial_paths:
+            #     path_points = trial['points']
                 
-                if len(path_points) >= 2:
-                    pixel_points = [to_pixel(wx, wy) for (wx, wy) in path_points]
+            #     if len(path_points) >= 2:
+            #         pixel_points = [to_pixel(wx, wy) for (wx, wy) in path_points]
                     
-                    cv2.circle(cv_image, pixel_points[0], 15, (255, 255, 255), -1)
-                    cv2.circle(cv_image, pixel_points[0], 12, (0, 255, 0), -1)
-                    cv2.circle(cv_image, pixel_points[0], 12, (0, 0, 0), 2)
+            #         cv2.circle(cv_image, pixel_points[0], 15, (255, 255, 255), -1)
+            #         cv2.circle(cv_image, pixel_points[0], 12, (0, 255, 0), -1)
+            #         cv2.circle(cv_image, pixel_points[0], 12, (0, 0, 0), 2)
             
-            # ============================================
-            # DRAW END POINTS (RED DOTS)
-            # ============================================
-            for trial in self.all_trial_paths:
-                path_points = trial['points']
+            # # ============================================
+            # # DRAW END POINTS (RED DOTS)
+            # # ============================================
+            # for trial in self.all_trial_paths:
+            #     path_points = trial['points']
                 
-                if len(path_points) >= 2:
-                    pixel_points = [to_pixel(wx, wy) for (wx, wy) in path_points]
+            #     if len(path_points) >= 2:
+            #         pixel_points = [to_pixel(wx, wy) for (wx, wy) in path_points]
                     
-                    cv2.circle(cv_image, pixel_points[-1], 15, (255, 255, 255), -1)
-                    cv2.circle(cv_image, pixel_points[-1], 12, (0, 0, 255), -1)
-                    cv2.circle(cv_image, pixel_points[-1], 12, (0, 0, 0), 2)
+            #         cv2.circle(cv_image, pixel_points[-1], 15, (255, 255, 255), -1)
+            #         cv2.circle(cv_image, pixel_points[-1], 12, (0, 0, 255), -1)
+            #         cv2.circle(cv_image, pixel_points[-1], 12, (0, 0, 0), 2)
             
-            # ============================================
-            # DRAW GOAL (YELLOW)
-            # ============================================
-            goal_px, goal_py = to_pixel(self.goal_x, self.goal_y)
-            cv2.circle(cv_image, (goal_px, goal_py), 20, (255, 255, 255), -1)
-            cv2.circle(cv_image, (goal_px, goal_py), 17, (0, 255, 255), -1)
-            cv2.circle(cv_image, (goal_px, goal_py), 17, (0, 0, 0), 2)
-            cv2.drawMarker(cv_image, (goal_px, goal_py), (0, 0, 0), 
-                        cv2.MARKER_CROSS, 20, 2)
+            # # ============================================
+            # # DRAW GOAL (YELLOW)
+            # # ============================================
+            # goal_px, goal_py = to_pixel(self.goal_x, self.goal_y)
+            # cv2.circle(cv_image, (goal_px, goal_py), 20, (255, 255, 255), -1)
+            # cv2.circle(cv_image, (goal_px, goal_py), 17, (0, 255, 255), -1)
+            # cv2.circle(cv_image, (goal_px, goal_py), 17, (0, 0, 0), 2)
+            # cv2.drawMarker(cv_image, (goal_px, goal_py), (0, 0, 0), 
+            #             cv2.MARKER_CROSS, 20, 2)
             
             # ============================================
             # TEXT INFO

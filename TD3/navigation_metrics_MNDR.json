@@ -1,0 +1,11 @@
+{
+  "summary": {
+    "avg_success_rate": 0.0,
+    "avg_path_length": 0.0,
+    "avg_shortest_path": 0.0,
+    "avg_spl": 0.0,
+    "prediction_error": 0.0,
+    "total_episodes": 0
+  },
+  "episodes": []
+}

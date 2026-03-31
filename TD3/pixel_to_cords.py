@@ -31,7 +31,7 @@ class VLM_Response_Processor:
     def __init__(self, vlmType, save_dir="/tmp/exploration_data"):
         self.save_dir = save_dir
         self.bridge = CvBridge()
-        self.vlmType = vlmType
+
         # Camera calibration
         self.camera_to_robot_translation = np.array([0.55, 0.02, 0.32])
         self.camera_to_robot_rotation = 0.0
@@ -43,7 +43,7 @@ class VLM_Response_Processor:
         self.load_existing_objects()
 
 
-        world_file = "/home/ai-lab/Downloads/DRL-robot-navigation_segway_imu_should_be_calibrated/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch/TD3.world"
+        world_file = "/home/ai-lab/Downloads/DRL-robot-navigation_segway_imu_should_be_calibrated/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch/TD3_signs2.world"
         output_csv = "_models.csv"
 
         data = self.extract_model_positions(world_file)
@@ -74,6 +74,7 @@ class VLM_Response_Processor:
         root = tree.getroot()
 
         positions = []
+        seen_models = set()
 
         IGNORE_NAMES = {'box', 'wall', 'ground', 'floor', 'ceiling'}
 
@@ -83,8 +84,11 @@ class VLM_Response_Processor:
             if name in IGNORE_NAMES:
                 continue
 
+            if name in seen_models:
+                continue
+
             static_tag = model.find('static')
-            if static_tag is not None and static_tag.text.strip().lower() == 'true':
+            if static_tag is not None and static_tag.text.strip().lower() in ['true', '1']:
                 continue
 
             pose_tag = model.find('pose')
@@ -92,7 +96,9 @@ class VLM_Response_Processor:
                 continue
 
             x, y, z, roll, pitch, yaw = map(float, pose_tag.text.split())
+
             positions.append([name, x, y, z])
+            seen_models.add(name)
 
         return positions
 
@@ -171,11 +177,8 @@ class VLM_Response_Processor:
     
         
         try:
-            detected_objects = None
-            if self.vlmType == 'moondream':
-                detected_objects = self.moonDetector.detect(cv_image, self.model_names)
-            else:
-                detected_objects = self.gptDetector.detect_with_vlm(cv_image, self.model_names)
+            detected_objects = self.moonDetector.detect(cv_image, self.model_names)
+            # detected_objects = self.gptDetector.detect_with_vlm(cv_image, self.model_names)
 
             if not detected_objects:
                 rospy.loginfo("No objects detected")
@@ -212,92 +215,75 @@ class VLM_Response_Processor:
             rospy.logerr(traceback.format_exc())
             return 0
    
-    def get_coords_from_pointcloud(self, pixel_x, pixel_y, pointcloud, current_pose):
-        """Extract 3D coordinates with strict integer casting and boundary checks"""
+    def get_coords_from_pointcloud(self, bbox, pointcloud, current_pose):
         if not pointcloud:
-            rospy.logwarn("No point cloud data available")
             return None
 
+        px1, py1, px2, py2 = bbox
         width = pointcloud.width
         height = pointcloud.height
-        print("width, height", width, height)
-        
-        center_u = int(round(pixel_x))
-        center_v = int(round(pixel_y))
-        print("center_u, center_v", center_u, center_v)
-        samples = []
-        search_radius = 2
-        
+
+        # Sample exact center pixel of the bounding box
+        center_u = int((px1 + px2) / 2)
+        center_v = int((py1 + py2) / 2)
+
+        # Clamp to image bounds
+        center_u = max(0, min(width - 1, center_u))
+        center_v = max(0, min(height - 1, center_v))
+
         try:
-            for dx in range(-search_radius, search_radius + 1):
-                for dy in range(-search_radius, search_radius + 1):
-                    u = center_u + dx
-                    v = center_v + dy
-                    
-                    if 0 <= u < width and 0 <= v < height:
-                        points = list(pc2.read_points(
-                            pointcloud,
-                            field_names=("x", "y", "z"),
-                            skip_nans=True,
-                            uvs=[(int(u), int(v))]
-                        ))
-                        
-                        if points:
-                            x, y, z = points[0]
-                            if math.isfinite(x) and math.isfinite(y) and math.isfinite(z):
-                                samples.append((x, y, z))
-            
-            if not samples:
-                rospy.logwarn(f"No valid points at ({center_u}, {center_v})")
+            points = list(pc2.read_points(
+                pointcloud,
+                field_names=("x", "y", "z"),
+                skip_nans=True,
+                uvs=[(center_u, center_v)]
+            ))
+
+            if not points:
+                rospy.logwarn(f"No valid point at exact pixel ({center_u}, {center_v})")
                 return None
 
-            samples_array = np.array(samples)
-            cam_x, cam_y, cam_z = np.median(samples_array, axis=0)
-            print("cam_x, cam_y, cam_z", cam_x, cam_y, cam_z)
-            
-            world_coords = self.transform_to_world_coords(cam_x, cam_y, cam_z, current_pose)
-            print("world_coords", world_coords)
-            return world_coords
-                
+            x, y, z = points[0]
+
+            if not (math.isfinite(x) and math.isfinite(y) and math.isfinite(z)):
+                rospy.logwarn(f"Non-finite point at ({center_u}, {center_v})")
+                return None
+
+            return self.transform_to_world_coords(x, y, z, current_pose)
+
         except Exception as e:
             rospy.logerr(f"Point cloud extraction error: {e}")
             return None
-    
+        
     def transform_to_world_coords(self, cam_x, cam_y, cam_z, current_pose):
-        """Transform camera coordinates to world frame"""
         if current_pose is None:
             return None
-        
         try:
             robot_pos = current_pose.position
             robot_quat = current_pose.orientation
-            
             siny_cosp = 2.0 * (robot_quat.w * robot_quat.z + robot_quat.x * robot_quat.y)
             cosy_cosp = 1.0 - 2.0 * (robot_quat.y * robot_quat.y + robot_quat.z * robot_quat.z)
             robot_yaw = math.atan2(siny_cosp, cosy_cosp)
+
             
-            point_robot_frame = np.array([cam_z, -cam_x, -cam_y])
+            point_robot_frame = np.array([cam_z, -cam_x, 0.0])
+           
             point_robot = point_robot_frame + self.camera_to_robot_translation
-            
+
             cos_yaw = math.cos(robot_yaw)
             sin_yaw = math.sin(robot_yaw)
-            
             offset_x = point_robot[0] * cos_yaw - point_robot[1] * sin_yaw
             offset_y = point_robot[0] * sin_yaw + point_robot[1] * cos_yaw
-            
-            world_x = robot_pos.x + offset_x 
-            world_y = robot_pos.y + offset_y
-            world_z = robot_pos.z + point_robot[2]
-            
-            return (world_x, world_y, world_z)
-            
+         
+
+            world_x = max(-5.0, min(5.0, robot_pos.x + offset_x))
+            world_y = max(-5.0, min(5.0, robot_pos.y + offset_y))
+   
+
+            return (world_x, world_y, 0.0)
         except Exception as e:
             rospy.logerr(f"Transform error: {e}")
             return None
-
-    # =========================================================================
-    # NEW: Cluster-based position estimation
-    # =========================================================================
 
     def cluster_observations(self, observations, cluster_radius=0.5):
         """
