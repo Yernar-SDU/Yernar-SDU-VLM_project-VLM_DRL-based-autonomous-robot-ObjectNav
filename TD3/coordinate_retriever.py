@@ -111,7 +111,7 @@ class ObjectCoordinateRetriever:
         """
         self.objects_file = objects_file
         self.objects_cache = []
-        self.client = OpenAI(api_key="REMOVED_API_KEY")
+        self.client = OpenAI(api_key=api_key)
         
         # Navigation metrics tracker
         self.metrics = NavigationMetrics()
