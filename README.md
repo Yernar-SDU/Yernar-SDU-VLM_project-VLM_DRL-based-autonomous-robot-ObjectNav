@@ -1,6 +1,50 @@
-# DRL Robot Navigation — Explorer Node
+# VLM + DRL Autonomous Robot — Object Navigation
 
-Autonomous robot exploration using frontier-based navigation and Vision-Language Model (VLM) object detection in Gazebo simulation.
+Autonomous robot navigation using Deep Reinforcement Learning (TD3) combined with Vision-Language Models (VLM) for semantic object detection and goal-directed navigation in Gazebo simulation. The robot explores an unknown environment, detects target objects using VLM inference, and navigates to them using a trained TD3 policy.
+
+---
+
+## Environments & Results
+
+### Single-Room Environment (Basic)
+The robot navigates a single-room world with scattered objects. Colored trajectories show multiple trials — the robot successfully reaches the goal (100% success rate).
+
+![Basic single-room navigation](images/enhanced5_basic.png)
+
+---
+
+### Multi-Room Environment
+A six-room house environment viewed from above in Gazebo. The robot's LiDAR field of view (blue cone) spans multiple rooms, enabling frontier-based exploration across doorways.
+
+![Multi-room Gazebo environment](images/multi_room_env_enhanced.png)
+
+---
+
+### Many-Objects Environment — Plant Target
+Dense object environment (`TD3_many.world`) where the robot navigates to a **plant** target. Multiple overlapping trajectories demonstrate consistent success across 5 trials.
+
+![Bird-eye view: plant target navigation](images/bird_eye_many_objects_plant.png)
+
+---
+
+### Many-Objects Environment — Trash Can Target
+Same dense environment, but targeting a **trash can**. The robot adapts its path across trials while reliably reaching the goal.
+
+![Bird-eye view: trash can target navigation](images/bird_eye_many_objects_trashcan.png)
+
+---
+
+### Obstacle Stress Test — Fridge Target
+`TD3_obs.world` adds traffic cones and boxes as obstacles. The robot navigates around them to reach a **fridge** target, demonstrating robust obstacle avoidance.
+
+![Bird-eye view: obstacle stress test with fridge target](images/bird_eye_obstacle_stress_fridge.png)
+
+---
+
+### Parking Sign Navigation (3D View)
+First-person Gazebo view of the robot navigating toward a **parking sign** in a cluttered indoor scene. The green dotted path shows the planned trajectory to the detected target.
+
+![Parking sign navigation - 3D view](images/parking_sign_navigation.png)
 
 ---
 
